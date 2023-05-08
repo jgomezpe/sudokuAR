@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0, shrink-to-fit=no">
+	<meta name="mobile-web-app-capable" content='yes'>
+	<meta charset="UTF-8">
+	<meta http-equiv="Expires" content="0">
+	<meta http-equiv="Last-Modified" content="0">
+	<meta http-equiv="Cache-Control" content="no-cache, mustrevalidate">
+	<meta http-equiv="Pragma" content="no-cache">
+	<title>Sudoku Augmented Reality</title>
+	<script type='text/javascript' src='src/imageprocess.js'></script> 
+	<script type='text/javascript' src='src/sudoku/recognizer.js'></script> 
+	<script type='text/javascript' src='src/sudoku/solver.js'></script> 
+</head>
+<body>
+
+<!-- Stream video via webcam -->
+<div id='video-wrap' class="video-wrap" style="display:none;" >
+	<video id="video" playsinline autoplay></video>
+</div>
+
+<!-- Webcam video snapshot -->
+<canvas id="canvas" width="640" height="360"></canvas>
+<script>
+'use strict';
+
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+
+
+var fMode = (window.innerWidth < 993)?{exact:'environment'}: 'user'
+const constraints = {
+	audio: true,
+	video: {
+		facingMode: fMode
+	}
+};
+
+// Access webcam
+async function init() {
+	try {
+		const stream = await navigator.mediaDevices.getUserMedia(constraints);
+		handleSuccess(stream);
+	} catch (e) {
+	 errorMsgElement.innerHTML = `navigator.getUserMedia error:${e.toString()}`;
+	}
+}
+
+// Success
+function handleSuccess(stream) {
+	window.stream = stream;
+	video.srcObject = stream;
+}
+
+// Load init
+init()
+
+// Developed by Professor Jonatan Gomez
+
+// Draw image
+var ctx = canvas.getContext('2d');
+
+var recognizer = new Recognizer()
+var solution = []
+
+function main() {
+	var width = video.videoWidth
+	var height = video.videoHeight
+	if(width>0 && height>0){
+		canvas.width = width
+		canvas.height = height
+		ctx.drawImage(video, 0, 0, width, height)
+		var image = new KImage(ctx.getImageData(0, 0, width, height).data, width)
+
+		var gray = image.toGray()
+		var bw = gray.toBW()
+
+		var regs = bw.regions() 
+
+		var sb = new SBProcessor(regs, width, height)
+
+		if( sb.ready ){
+			var W = 270
+			var H = 270
+			var cells = sb.locate(W,H)
+			var board = recognizer.apply(cells)
+			if(board!=null){
+				solution = []
+				for(var i=0; i<9; i++){
+					for(var j=0; j<9; j++)
+						if(board[i][j]==0) solution.push([i,j])
+				}
+				if(solve(board)){
+					for(var k=0; k<solution.length; k++)
+						solution[k].push(board[solution[k][0]][solution[k][1]])
+				}else solution = []
+			}
+			sb.draw(ctx, solution, recognizer.regions)
+		}
+	}
+	setTimeout(main, 10)
+}
+
+main()
+
+</script>
+
+</body>
+</html>
+
