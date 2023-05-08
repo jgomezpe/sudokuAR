@@ -1,7 +1,7 @@
 # sudokuAR
 A Real Augmented Sudoku Solver 
 
-This is a real augmented sudoku solver. You can use the rear camera of your mobile to point a sudoku board and it will solve for you.
+This is a real augmented sudoku solver. You can use the rear camera of your mobile to point a sudoku board and it will solve for you. Cannot be used with Firefox.
 
 <h3>Version 1.0</h3>
 
